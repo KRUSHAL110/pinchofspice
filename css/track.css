@@ -1,0 +1,167 @@
+/* Customer order tracking */
+
+.track-main { padding: 2.5rem 0 4rem; background: #f4f5f7; min-height: 60vh; }
+
+.track-container { max-width: 720px; }
+
+.track-container h1 { font-size: 2rem; color: var(--dark-color); }
+
+.track-intro { color: #777; margin-bottom: 2rem; }
+
+.track-empty {
+    background: #fff;
+    padding: 3rem 1.5rem;
+    border-radius: 14px;
+    text-align: center;
+    color: #888;
+    box-shadow: var(--shadow);
+}
+
+.track-empty .btn { margin-top: 1.25rem; }
+
+.track-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+    border-left: 5px solid var(--primary-color);
+}
+
+.track-card.status-preparing { border-left-color: #1e88e5; }
+.track-card.status-delivered { border-left-color: var(--success-color); }
+.track-card.status-cancelled { border-left-color: #b3261e; }
+.track-card.is-missing { border-left-color: var(--border-color); }
+
+.track-card > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.track-card h2 { font-size: 1.1rem; color: var(--dark-color); letter-spacing: 0.02em; }
+
+.track-note { font-size: 0.86rem; color: #888; margin: 0.2rem 0 0; }
+
+.track-pill {
+    padding: 0.28rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #fff0e8;
+    color: #d2551f;
+    white-space: nowrap;
+}
+
+.status-preparing .track-pill { background: #e3f0fd; color: #1565c0; }
+.status-delivered .track-pill { background: #e8f5e9; color: #2e7d32; }
+.status-cancelled .track-pill { background: #fdecea; color: #b3261e; }
+
+/* Progress steps */
+
+.track-steps { list-style: none; padding: 1.4rem 0; margin: 0; }
+
+.track-step {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 0.9rem;
+    align-items: start;
+    position: relative;
+    padding-bottom: 1.4rem;
+}
+
+.track-step:last-child { padding-bottom: 0; }
+
+/* connector line between bullets */
+.track-step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 16px;
+    top: 34px;
+    bottom: 6px;
+    width: 2px;
+    background: var(--border-color);
+}
+
+.track-step.is-done:not(:last-child)::before { background: var(--success-color); }
+
+.track-bullet {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: var(--light-color);
+    color: #aaa;
+    border: 2px solid var(--border-color);
+}
+
+.track-step.is-done .track-bullet {
+    background: var(--success-color);
+    border-color: var(--success-color);
+    color: #fff;
+}
+
+.track-step.is-now .track-bullet {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 0 0 5px rgba(255, 107, 53, 0.16);
+}
+
+.track-step strong { color: #bbb; font-size: 0.98rem; }
+.track-step.is-done strong { color: var(--text-color); }
+.track-step.is-now strong { color: var(--dark-color); }
+.track-step p { font-size: 0.86rem; color: #777; margin: 0.15rem 0 0; }
+
+.track-cancelled {
+    padding: 1.1rem;
+    margin: 1.25rem 0;
+    background: #fdecea;
+    border-radius: 10px;
+    color: #b3261e;
+}
+
+.track-cancelled p { margin: 0.3rem 0 0; font-size: 0.9rem; color: #7d1f19; }
+
+/* Items */
+
+.track-items { list-style: none; padding: 1rem 0; margin: 0; border-top: 1px solid var(--border-color); }
+
+.track-items li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    font-size: 0.94rem;
+}
+
+.track-items em { color: #aaa; font-style: normal; font-size: 0.85em; }
+
+.track-card > footer {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-top: 0.9rem;
+    border-top: 2px solid var(--border-color);
+}
+
+.track-card > footer strong { font-size: 1.35rem; color: var(--primary-color); }
+
+.track-paid {
+    margin-top: 0.85rem;
+    font-size: 0.8rem;
+    color: #2e7d32;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    word-break: break-all;
+}
+
+.track-cta { display: inline-block; margin-top: 1.25rem; text-decoration: none; }

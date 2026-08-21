@@ -476,3 +476,41 @@
     .dish-row { grid-template-columns: auto 1fr; }
     .dish-actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
+
+/* ---- Polish ---- */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+.order-card,
+.dish-row {
+    transition: box-shadow 0.18s ease;
+}
+
+.order-card:hover,
+.dish-row:hover { box-shadow: var(--shadow-lg); }
+
+/* New orders should catch the eye in a busy kitchen */
+.order-card.status-pending {
+    box-shadow: 0 0 0 1px rgba(255, 107, 53, 0.25), var(--shadow);
+}
+
+/* iOS zooms any input under 16px */
+.login-card input,
+.dish-grid input,
+.dish-grid select { font-size: 16px; }
+
+.admin-shell { padding-bottom: 5rem; }

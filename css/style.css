@@ -1704,3 +1704,107 @@ span.close-modal:hover {
     .modal-footer { flex-direction: column-reverse; }
     .modal-footer .btn { width: 100%; }
 }
+
+/* ============================================================
+   Polish pass: focus states, motion, spacing, small-screen fit
+   ============================================================ */
+
+/* Keyboard users must always be able to see where they are */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.payment-option:focus-within {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* Respect people who get motion sick */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Buttons: consistent press feedback and a proper disabled state */
+.btn {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn:active { transform: translateY(1px); }
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Menu cards lift a little, and images never jump the layout */
+.menu-item {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.menu-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.menu-item img {
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    width: 100%;
+    background: var(--light-color);
+}
+
+/* Modals: scrollable on short screens instead of clipping the buttons */
+.modal-content {
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-header,
+.modal-footer { flex: 0 0 auto; }
+
+/* Form fields: consistent sizing and 16px minimum so iOS doesn't zoom in */
+.form-group input,
+.form-group textarea,
+.checkout-form input,
+.checkout-form textarea {
+    font-size: 16px;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 100%;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--primary-color);
+}
+
+/* Tap targets on phones */
+@media (max-width: 640px) {
+    .btn { min-height: 46px; }
+    .filter-btn { min-height: 40px; }
+    .section-title { font-size: 1.7rem; }
+    .hero-title { font-size: 2rem; }
+}
+
+/* Footer nav spacing when the policy links wrap */
+.footer .policy-footer-nav { margin-bottom: 1rem; }

@@ -20,6 +20,18 @@ if (!FIREBASE_NOT_CONFIGURED) {
     }
 }
 
+// Keep the ids of this device's own orders so the tracking page can show them
+function rememberOrder(id, orderRef) {
+    try {
+        const KEY = 'pos_my_orders';
+        const prev = JSON.parse(localStorage.getItem(KEY) || '[]');
+        const next = [{ id, ref: orderRef, at: Date.now() }, ...(Array.isArray(prev) ? prev : [])].slice(0, 20);
+        localStorage.setItem(KEY, JSON.stringify(next));
+    } catch (err) {
+        console.warn('[orders] could not remember this order locally', err);
+    }
+}
+
 window.saveOrder = async function saveOrder(order, orderRef, paymentId) {
     if (!db) return null;
     try {
@@ -43,6 +55,7 @@ window.saveOrder = async function saveOrder(order, orderRef, paymentId) {
             paymentId: paymentId || '',
             createdAt: serverTimestamp()
         });
+        rememberOrder(docRef.id, orderRef);
         return docRef.id;
     } catch (err) {
         // Never block the customer on this

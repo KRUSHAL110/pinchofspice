@@ -81,8 +81,8 @@ function searchMenuItems(searchTerm) {
 
     // Filter items based on search term
     const filteredItems = (window.menuData || []).filter(item => {
-        const itemName = item.name.toLowerCase();
-        const itemCategory = item.categoryDisplay.toLowerCase();
+        const itemName = (item.name || '').toLowerCase();
+        const itemCategory = (item.categoryDisplay || item.category || '').toLowerCase();
         return itemName.includes(searchTerm) || itemCategory.includes(searchTerm);
     });
 
