@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Orders | Pinch of Spice Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+    <!-- Login -->
+    <div class="admin-login" id="loginView">
+        <form class="login-card" id="loginForm">
+            <h1>Pinch of Spice</h1>
+            <p class="login-sub">Staff orders dashboard</p>
+            <label for="email">Email</label>
+            <input type="email" id="email" autocomplete="username" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" autocomplete="current-password" required>
+            <button type="submit" class="btn btn-primary" id="loginBtn">Sign in</button>
+            <p class="login-error" id="loginError" hidden></p>
+        </form>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="admin-shell" id="dashView" hidden>
+        <header class="admin-header">
+            <div>
+                <h1>Orders</h1>
+                <p class="admin-sub" id="connState">Live</p>
+            </div>
+            <button class="btn btn-secondary" id="signOutBtn">Sign out</button>
+        </header>
+
+        <section class="admin-stats">
+            <div class="stat"><span class="stat-num" id="statPending">0</span><span class="stat-label">Pending</span></div>
+            <div class="stat"><span class="stat-num" id="statToday">0</span><span class="stat-label">Orders today</span></div>
+            <div class="stat"><span class="stat-num" id="statRevenue">Rs.0</span><span class="stat-label">Today's total</span></div>
+        </section>
+
+        <nav class="admin-filters">
+            <button class="filter-btn active" data-status="all">All</button>
+            <button class="filter-btn" data-status="pending">Pending</button>
+            <button class="filter-btn" data-status="preparing">Preparing</button>
+            <button class="filter-btn" data-status="delivered">Delivered</button>
+            <button class="filter-btn" data-status="cancelled">Cancelled</button>
+        </nav>
+
+        <main class="admin-orders" id="orderList">
+            <p class="admin-empty">Loading orders...</p>
+        </main>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>

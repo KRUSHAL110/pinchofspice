@@ -396,7 +396,13 @@ function initializeForms() {
         const orderRef = pendingOrderRef || buildOrderRef();
         const waUrl = `https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(buildWhatsAppMessage(pendingOrderData, orderRef))}`;
 
-        // Opened synchronously from the click so mobile browsers don't block it
+        // Record the order for the admin dashboard. Not awaited: the WhatsApp
+        // window must open in the same tick as the click or mobile blocks it,
+        // and a storage failure must never stop the customer ordering.
+        if (typeof window.saveOrder === 'function') {
+            window.saveOrder(pendingOrderData, orderRef);
+        }
+
         window.open(waUrl, '_blank');
 
         cart = [];
