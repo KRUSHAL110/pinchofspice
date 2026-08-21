@@ -220,16 +220,16 @@ function render() {
 // ---------------------------------------------------------------- Menu editor
 
 const CATEGORIES = [
-    ['non-veg-rice', 'Non-Veg Chinese Rice'],
-    ['veg-rice', 'Veg Chinese Rice'],
-    ['non-veg-noodles', 'Non-Veg Noodles'],
-    ['veg-noodles', 'Veg Noodles'],
-    ['non-veg-starter', 'Non-Veg Starter'],
-    ['veg-starter', 'Veg Starter'],
-    ['non-veg-soup', 'Non-Veg Soup'],
+    ['momos', 'Momos'],
+    ['fries', 'Fries'],
     ['veg-soup', 'Veg Soup'],
-    ['tandoor', 'Special Tandoor'],
-    ['special', 'Pinch of Spice Special']
+    ['non-veg-soup', 'Chicken Soup'],
+    ['veg-starter', 'Veg Starters'],
+    ['non-veg-starter', 'Non-Veg Starters'],
+    ['veg-noodles', 'Veg Noodles'],
+    ['non-veg-noodles', 'Non-Veg Noodles'],
+    ['veg-rice', 'Veg Rice'],
+    ['non-veg-rice', 'Non-Veg Rice']
 ];
 
 const menuState = { items: [], filter: 'all', editingId: null, saving: false };
