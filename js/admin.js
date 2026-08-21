@@ -56,9 +56,15 @@ loginForm.addEventListener('submit', async (e) => {
     } catch (err) {
         // Don't reveal whether the email exists - just say the pair is wrong
         const wrong = ['auth/wrong-password', 'auth/user-not-found', 'auth/invalid-credential'];
-        showError(wrong.includes(err.code)
-            ? 'Wrong email or password.'
-            : `Could not sign in: ${err.code || err.message}`);
+        if (wrong.includes(err.code)) {
+            showError('Wrong email or password. Check the account exists in Firebase Authentication.');
+        } else if (err.code === 'auth/too-many-requests') {
+            showError('Too many attempts. Wait a few minutes and try again.');
+        } else if (err.code === 'auth/network-request-failed') {
+            showError('No connection. Check your internet and try again.');
+        } else {
+            showError(`Could not sign in: ${err.code || err.message}`);
+        }
     } finally {
         loginBtn.disabled = false;
         loginBtn.textContent = 'Sign in';
@@ -92,7 +98,11 @@ function watchOrders() {
         connState.classList.remove('is-error');
         render();
     }, (err) => {
-        connState.textContent = `Connection problem: ${err.code}`;
+        if (err.code === 'permission-denied') {
+            connState.textContent = 'This account is signed in but is not an admin. Ask for its UID to be added.';
+        } else {
+            connState.textContent = `Connection problem: ${err.code}`;
+        }
         connState.classList.add('is-error');
     });
 }
