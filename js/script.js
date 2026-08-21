@@ -497,7 +497,7 @@ function buildUpiLink(amount, orderRef) {
 }
 
 // Where the Razorpay server endpoints live. Filled in after the API is deployed.
-const PAYMENT_API_BASE = '';
+const PAYMENT_API_BASE = 'https://pinchofspice-payments.vercel.app';
 
 const PAYMENT_LABELS = {
     razorpay: 'Paid online (card / UPI / netbanking)',
