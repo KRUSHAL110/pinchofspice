@@ -1808,3 +1808,11 @@ textarea:focus-visible,
 
 /* Footer nav spacing when the policy links wrap */
 .footer .policy-footer-nav { margin-bottom: 1rem; }
+
+.success-paid {
+    margin-top: 0.75rem;
+    font-size: 0.82rem;
+    color: #2e7d32;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    word-break: break-all;
+}

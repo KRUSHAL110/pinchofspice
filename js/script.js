@@ -438,10 +438,12 @@ function initializeForms() {
         // Record the order for the admin dashboard. Not awaited: the WhatsApp
         // window must open in the same tick as the click or mobile blocks it,
         // and a storage failure must never stop the customer ordering.
+        let savedId = null;
         if (typeof window.saveOrder === 'function') {
-            window.saveOrder(pendingOrderData, orderRef, paymentId);
+            savedId = window.saveOrder(pendingOrderData, orderRef, paymentId);
         }
 
+        // Notify the kitchen. Opened from the click so mobile doesn't block it.
         window.open(waUrl, '_blank');
 
         cart = [];
@@ -449,6 +451,13 @@ function initializeForms() {
         updateCartCount();
 
         document.getElementById('orderId').textContent = orderRef;
+        const trackLink = document.querySelector('.track-cta');
+        if (trackLink) trackLink.href = savedId ? `track/?id=${encodeURIComponent(savedId)}` : 'track/';
+        const paidLine = document.getElementById('successPaid');
+        if (paidLine) {
+            paidLine.textContent = paymentId ? `Payment confirmed - ${paymentId}` : '';
+            paidLine.hidden = !paymentId;
+        }
         document.getElementById('paymentModal').classList.remove('active');
         document.getElementById('successModal').classList.add('active');
 

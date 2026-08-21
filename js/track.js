@@ -19,12 +19,54 @@ const STEPS = [
 ];
 
 function savedOrders() {
+    let list = [];
     try {
         const raw = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-        return Array.isArray(raw) ? raw.slice(0, 20) : [];
+        list = Array.isArray(raw) ? raw.slice(0, 20) : [];
     } catch {
-        return [];
+        list = [];
     }
+
+    // A ?id= link opens that order even if this browser has no record of it,
+    // so a customer can follow their order on a different device.
+    const wanted = new URLSearchParams(location.search).get('id');
+    if (wanted && !list.some((e) => e.id === wanted)) {
+        list = [{ id: wanted, ref: 'Your order', at: Date.now() }, ...list];
+    }
+    return list;
+}
+
+// Roughly how long the kitchen says an order takes
+const PREP_MINUTES = 45;
+
+function placedAt(data) {
+    const ts = data?.createdAt;
+    if (!ts) return null;
+    return typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
+}
+
+function timingLine(data) {
+    const placed = placedAt(data);
+    if (!placed) return '';
+    const clock = placed.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const mins = Math.max(0, Math.floor((Date.now() - placed.getTime()) / 60000));
+
+    if (data.status === 'delivered') {
+        return `<p class="track-timing">Ordered at ${clock} &middot; delivered</p>`;
+    }
+    if (data.status === 'cancelled') {
+        return `<p class="track-timing">Ordered at ${clock}</p>`;
+    }
+
+    const eta = new Date(placed.getTime() + PREP_MINUTES * 60000);
+    const etaClock = eta.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const late = Date.now() > eta.getTime();
+    return `<p class="track-timing${late ? ' is-late' : ''}">
+        Ordered at ${clock} &middot; ${mins} min ago<br>
+        ${late
+            ? `Running a little late &mdash; call <a href="tel:8451876111">8451876111</a> if you need an update.`
+            : `Expected by about <strong>${etaClock}</strong>`}
+    </p>`;
 }
 
 function esc(v) {
@@ -72,6 +114,7 @@ function cardHtml(entry, data) {
             </div>
             <span class="track-pill">${esc(data.status)}</span>
         </header>
+        ${timingLine(data)}
         ${stepsHtml(data.status)}
         <ul class="track-items">${items}</ul>
         <footer>
@@ -104,6 +147,7 @@ function start() {
     const db = getFirestore(app);
     const byId = {};
 
+    window.__trackRerender = () => render(entries, byId);
     render(entries, byId);
 
     // Live: the card updates itself the moment the kitchen changes the status
@@ -118,3 +162,8 @@ function start() {
 }
 
 start();
+
+// Keep "x min ago" and the late warning honest without hammering the database
+setInterval(() => {
+    if (typeof window.__trackRerender === 'function') window.__trackRerender();
+}, 60000);
