@@ -656,8 +656,16 @@ function initializeNavigation() {
     // Smooth scroll and close mobile menu
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
+            const targetId = link.getAttribute('href') || '';
+
+            // Only hijack same-page anchors. A real link such as "track/" must
+            // navigate normally - and querySelector('track/') throws anyway.
+            if (!targetId.startsWith('#')) {
+                navMenu.classList.remove('active');
+                return;
+            }
+
             e.preventDefault();
-            const targetId = link.getAttribute('href');
             const targetSection = document.querySelector(targetId);
 
             if (targetSection) {

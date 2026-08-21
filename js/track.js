@@ -6,7 +6,7 @@
 // see another's.
 
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
-import { getFirestore, doc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
+import { getFirestore, doc, onSnapshot, getDoc } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import { firebaseConfig, FIREBASE_NOT_CONFIGURED } from './firebase-config.js';
 
 const STORE_KEY = 'pos_my_orders';
@@ -95,7 +95,7 @@ function stepsHtml(status) {
     }).join('')}</ol>`;
 }
 
-function cardHtml(entry, data) {
+function cardHtml(entry, data, isHistory) {
     if (!data) {
         return `<article class="track-card is-missing">
             <h2>${esc(entry.ref)}</h2>
@@ -115,15 +115,20 @@ function cardHtml(entry, data) {
             <span class="track-pill">${esc(data.status)}</span>
         </header>
         ${timingLine(data)}
-        ${stepsHtml(data.status)}
+        ${isHistory ? '' : stepsHtml(data.status)}
         <ul class="track-items">${items}</ul>
         <footer>
             <span>Total</span>
             <strong>Rs.${esc(data.total)}</strong>
         </footer>
         ${data.paymentId ? `<p class="track-paid">&#10003; Paid &middot; ${esc(data.paymentId)}</p>` : ''}
+        ${isHistory && data.status !== 'cancelled'
+            ? `<button class="btn btn-primary btn-reorder" data-reorder="${esc(entry.id)}">Order this again</button>`
+            : ''}
     </article>`;
 }
+
+const ACTIVE = ['pending', 'preparing'];
 
 function render(entries, byId) {
     if (!entries.length) {
@@ -133,7 +138,113 @@ function render(entries, byId) {
         </div>`;
         return;
     }
-    listEl.innerHTML = entries.map((e) => cardHtml(e, byId[e.id])).join('');
+
+    // Anything still cooking goes on top; everything else becomes history.
+    const active = [];
+    const past = [];
+    entries.forEach((e) => {
+        const data = byId[e.id];
+        // Unknown (still loading, or missing) is treated as active so it stays visible
+        if (!data || ACTIVE.includes(data.status)) active.push(e);
+        else past.push(e);
+    });
+
+    past.sort((a, b) => {
+        const da = placedAt(byId[a.id])?.getTime() ?? a.at ?? 0;
+        const db2 = placedAt(byId[b.id])?.getTime() ?? b.at ?? 0;
+        return db2 - da;
+    });
+
+    const spent = past.reduce((sum, e) => {
+        const d = byId[e.id];
+        return sum + (d && d.status !== 'cancelled' ? Number(d.total) || 0 : 0);
+    }, 0);
+
+    let html = '';
+
+    if (active.length) {
+        html += `<h2 class="track-section">Happening now</h2>`;
+        html += active.map((e) => cardHtml(e, byId[e.id])).join('');
+    }
+
+    if (past.length) {
+        html += `<div class="track-history-head">
+            <h2 class="track-section">Order history</h2>
+            <span class="track-history-meta">${past.length} order${past.length > 1 ? 's' : ''}${spent ? ` &middot; Rs.${spent} spent` : ''}</span>
+        </div>`;
+        html += past.map((e) => cardHtml(e, byId[e.id], true)).join('');
+    }
+
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('[data-reorder]').forEach((btn) => {
+        btn.addEventListener('click', () => reorder(byId[btn.dataset.reorder]));
+    });
+}
+
+// Current menu, used so re-ordering never charges yesterday's price
+let currentMenu = [];
+
+async function loadCurrentMenu(db) {
+    try {
+        const snap = await getDoc(doc(db, 'menu', 'current'));
+        if (snap.exists() && Array.isArray(snap.data().items)) {
+            currentMenu = snap.data().items.filter((i) => i.available !== false);
+        }
+    } catch (err) {
+        console.warn('[track] could not load the menu for re-ordering', err);
+    }
+}
+
+// Put a previous order's items back into the cart, at today's prices
+function reorder(data) {
+    if (!data || !Array.isArray(data.items)) return;
+
+    const matched = [];
+    const gone = [];
+
+    data.items.forEach((it) => {
+        const dish = currentMenu.find(
+            (d) => String(d.name).trim().toLowerCase() === String(it.name).trim().toLowerCase()
+        );
+        const price = dish?.prices?.find((p) => p.size === it.size);
+
+        if (!dish || !price) {
+            gone.push(it.name);
+            return;
+        }
+        matched.push({
+            id: dish.id,
+            name: dish.name,
+            category: dish.categoryDisplay || dish.category,
+            type: dish.type,
+            size: price.size,
+            price: price.price,
+            quantity: it.quantity
+        });
+    });
+
+    if (!matched.length) {
+        alert('Sorry, none of those dishes are on the menu right now.');
+        return;
+    }
+    if (gone.length) {
+        alert(`These are no longer available and were left out:\n\n${gone.join('\n')}`);
+    }
+
+    try {
+        const raw = JSON.parse(localStorage.getItem('cart') || '[]');
+        const next = Array.isArray(raw) ? raw.slice() : [];
+        matched.forEach((m) => {
+            const found = next.find((c) => c.name === m.name && c.size === m.size);
+            if (found) found.quantity += m.quantity;
+            else next.push(m);
+        });
+        localStorage.setItem('cart', JSON.stringify(next));
+        location.href = '../index.html#menu';
+    } catch (err) {
+        console.warn('[track] could not reorder', err);
+    }
 }
 
 function start() {
@@ -149,6 +260,7 @@ function start() {
 
     window.__trackRerender = () => render(entries, byId);
     render(entries, byId);
+    loadCurrentMenu(db);
 
     // Live: the card updates itself the moment the kitchen changes the status
     entries.forEach((entry) => {

@@ -184,3 +184,33 @@
 }
 
 .track-timing.is-late a { color: #8a6100; font-weight: 700; }
+
+.track-section {
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #999;
+    margin: 2rem 0 0.9rem;
+}
+
+.track-section:first-child { margin-top: 0; }
+
+.track-history-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.track-history-meta { font-size: 0.85rem; color: #999; }
+
+.btn-reorder {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.7rem 1rem;
+    font-size: 0.92rem;
+}
+
+/* History cards are quieter than live ones */
+.track-card.is-history { opacity: 0.92; }
