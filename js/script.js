@@ -333,6 +333,12 @@ function showCheckout() {
 
 // Initialize forms
 function initializeForms() {
+    // Don't offer online payment until the payment API is live
+    if (!PAYMENT_API_BASE) {
+        const online = document.querySelector('input[name="paymentMethod"][value="razorpay"]');
+        if (online) online.closest('.payment-option').style.display = 'none';
+    }
+
     const checkoutForm = document.getElementById('checkoutForm');
     const contactForm = document.getElementById('contactForm');
     const closeSuccessBtn = document.getElementById('closeSuccess');
@@ -380,9 +386,11 @@ function initializeForms() {
 
         // Nothing to pay up front on COD, so don't gate the button behind the checkbox
         const isCod = selectedPayment.value === 'cod';
+        const isOnline = selectedPayment.value === 'razorpay';
+        confirmOrderBtn.textContent = isOnline ? 'Pay and send order' : 'Send Order on WhatsApp';
         paymentConfirmedCheckbox.checked = false;
-        paymentConfirmedCheckbox.closest('.payment-confirmation').style.display = isCod ? 'none' : '';
-        confirmOrderBtn.disabled = !isCod;
+        paymentConfirmedCheckbox.closest('.payment-confirmation').style.display = (isCod || isOnline) ? 'none' : '';
+        confirmOrderBtn.disabled = !(isCod || isOnline);
 
         // Close checkout modal and show payment modal
         document.getElementById('checkoutModal').classList.remove('active');
@@ -390,17 +398,36 @@ function initializeForms() {
     });
 
     // Handle confirm order button - send the order to the restaurant on WhatsApp
-    confirmOrderBtn.addEventListener('click', () => {
+    confirmOrderBtn.addEventListener('click', async () => {
         if (!pendingOrderData) return;
 
         const orderRef = pendingOrderRef || buildOrderRef();
-        const waUrl = `https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(buildWhatsAppMessage(pendingOrderData, orderRef))}`;
+
+        // Online payment has to succeed and be verified before we treat this as an order
+        let paymentId = null;
+        if (pendingOrderData.paymentMethod === 'razorpay') {
+            confirmOrderBtn.disabled = true;
+            confirmOrderBtn.textContent = 'Opening payment...';
+            try {
+                paymentId = await payWithRazorpay(pendingOrderData.total, orderRef, pendingOrderData.customer);
+            } catch (err) {
+                showNotification(err.message);
+                confirmOrderBtn.disabled = false;
+                confirmOrderBtn.textContent = 'Pay and send order';
+                return;
+            }
+            confirmOrderBtn.disabled = false;
+            confirmOrderBtn.textContent = 'Pay and send order';
+            if (!paymentId) return; // customer closed the payment window
+        }
+
+        const waUrl = `https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(buildWhatsAppMessage(pendingOrderData, orderRef, paymentId))}`;
 
         // Record the order for the admin dashboard. Not awaited: the WhatsApp
         // window must open in the same tick as the click or mobile blocks it,
         // and a storage failure must never stop the customer ordering.
         if (typeof window.saveOrder === 'function') {
-            window.saveOrder(pendingOrderData, orderRef);
+            window.saveOrder(pendingOrderData, orderRef, paymentId);
         }
 
         window.open(waUrl, '_blank');
@@ -469,11 +496,66 @@ function buildUpiLink(amount, orderRef) {
     return `upi://pay?${params.toString()}`;
 }
 
+// Where the Razorpay server endpoints live. Filled in after the API is deployed.
+const PAYMENT_API_BASE = '';
+
 const PAYMENT_LABELS = {
+    razorpay: 'Paid online (card / UPI / netbanking)',
     paytm: 'Paytm / UPI',
     phonepe: 'PhonePe',
     cod: 'Cash on Delivery'
 };
+
+// Runs the full online-payment flow. Resolves to a Razorpay payment id once the
+// payment is made AND our server has verified its signature; resolves to null if
+// the customer closes the window. Throws if something actually went wrong.
+async function payWithRazorpay(amount, orderRef, customer) {
+    if (!PAYMENT_API_BASE) throw new Error('Online payment is not switched on yet.');
+    if (typeof window.Razorpay !== 'function') throw new Error('Payment window could not load. Check your connection.');
+
+    const createRes = await fetch(`${PAYMENT_API_BASE}/api/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, orderRef })
+    });
+    const created = await createRes.json();
+    if (!createRes.ok) throw new Error(created.error || 'Could not start the payment.');
+
+    return new Promise((resolve, reject) => {
+        const rzp = new window.Razorpay({
+            key: created.keyId,
+            order_id: created.orderId,
+            amount: created.amount,
+            currency: 'INR',
+            name: 'Pinch of Spice',
+            description: `Order ${orderRef}`,
+            prefill: { name: customer.name, contact: customer.phone },
+            theme: { color: '#ff6b35' },
+            modal: { ondismiss: () => resolve(null) },
+            handler: async (response) => {
+                try {
+                    const verifyRes = await fetch(`${PAYMENT_API_BASE}/api/verify-payment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(response)
+                    });
+                    const result = await verifyRes.json();
+                    if (!verifyRes.ok || !result.verified) {
+                        // Money may have left the customer's account, so never
+                        // silently swallow this - tell them to call the restaurant.
+                        reject(new Error('We could not confirm your payment. Please call 8451876111 before paying again.'));
+                        return;
+                    }
+                    resolve(result.paymentId);
+                } catch (err) {
+                    reject(new Error('We could not confirm your payment. Please call 8451876111 before paying again.'));
+                }
+            }
+        });
+        rzp.on('payment.failed', (e) => reject(new Error(e?.error?.description || 'The payment failed.')));
+        rzp.open();
+    });
+}
 
 // Short human-readable reference so the customer and the kitchen can talk about the same order
 function buildOrderRef() {
@@ -484,7 +566,7 @@ function buildOrderRef() {
     return `POS-${stamp}-${rand}`;
 }
 
-function buildWhatsAppMessage(order, orderRef) {
+function buildWhatsAppMessage(order, orderRef, paymentId) {
     const lines = [];
     lines.push('*NEW ORDER - Pinch of Spice*');
     lines.push(`Order: ${orderRef}`);
@@ -496,6 +578,9 @@ function buildWhatsAppMessage(order, orderRef) {
     lines.push('');
     lines.push(`*TOTAL: Rs.${order.total}*`);
     lines.push(`Payment: ${PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod}`);
+    if (paymentId) {
+        lines.push(`Payment ID: ${paymentId}`);
+    }
     lines.push('');
     lines.push('*Delivery details*');
     lines.push(`Name: ${order.customer.name}`);
@@ -511,6 +596,19 @@ function buildWhatsAppMessage(order, orderRef) {
 function showPaymentDetails(paymentMethod, amount, orderRef) {
     const paymentDetails = document.getElementById('paymentDetails');
     const upiLink = buildUpiLink(amount, orderRef);
+
+    if (paymentMethod === 'razorpay') {
+        paymentDetails.innerHTML = `
+            <h3>Pay Rs.${amount} online</h3>
+            <div class="payment-upi">
+                <p class="upi-hint">Card, UPI, wallet or netbanking. Your payment is confirmed
+                before the order is sent, so nothing is left uncertain.</p>
+                <p class="upi-ref">Order reference <strong>${orderRef}</strong></p>
+                <p class="upi-amount">Amount: Rs.${amount}</p>
+            </div>
+        `;
+        return;
+    }
 
     if (paymentMethod === 'paytm' || paymentMethod === 'phonepe') {
         const appName = paymentMethod === 'phonepe' ? 'PhonePe' : 'Paytm / UPI';

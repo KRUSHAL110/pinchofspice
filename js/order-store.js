@@ -20,7 +20,7 @@ if (!FIREBASE_NOT_CONFIGURED) {
     }
 }
 
-window.saveOrder = async function saveOrder(order, orderRef) {
+window.saveOrder = async function saveOrder(order, orderRef, paymentId) {
     if (!db) return null;
     try {
         const docRef = await addDoc(collection(db, 'orders'), {
@@ -40,6 +40,7 @@ window.saveOrder = async function saveOrder(order, orderRef) {
             total: order.total,
             paymentMethod: order.paymentMethod,
             status: 'pending',
+            paymentId: paymentId || '',
             createdAt: serverTimestamp()
         });
         return docRef.id;

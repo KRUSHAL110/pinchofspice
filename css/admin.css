@@ -291,3 +291,11 @@
     .order-actions { flex-direction: column; }
     .order-actions .btn { width: 100%; }
 }
+
+.order-payid {
+    font-size: 0.82rem;
+    color: #2e7d32;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    word-break: break-all;
+    margin-bottom: 0.5rem;
+}

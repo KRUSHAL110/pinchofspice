@@ -189,10 +189,11 @@ function render() {
             </div>
 
             <ul class="order-items">${items}</ul>
+            ${o.paymentId ? `<p class="order-payid">Payment ID: ${esc(o.paymentId)}</p>` : ''}
 
             <footer>
                 <span class="order-total">Rs.${esc(o.total)}</span>
-                <span class="order-pay">${esc(o.paymentMethod)}</span>
+                <span class="order-pay">${esc(o.paymentMethod)}${o.paymentId ? ' &middot; paid' : ''}</span>
             </footer>
 
             ${actions ? `<div class="order-actions">${actions}</div>` : ''}
