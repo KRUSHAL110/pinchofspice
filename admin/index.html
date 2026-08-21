@@ -34,6 +34,12 @@
             <button class="btn btn-secondary" id="signOutBtn">Sign out</button>
         </header>
 
+        <nav class="admin-tabs">
+            <button class="admin-tab active" data-view="orders">Orders</button>
+            <button class="admin-tab" data-view="menu">Menu</button>
+        </nav>
+
+        <section id="ordersView">
         <section class="admin-stats">
             <div class="stat"><span class="stat-num" id="statPending">0</span><span class="stat-label">Pending</span></div>
             <div class="stat"><span class="stat-num" id="statToday">0</span><span class="stat-label">Orders today</span></div>
@@ -51,6 +57,55 @@
         <main class="admin-orders" id="orderList">
             <p class="admin-empty">Loading orders...</p>
         </main>
+        </section>
+
+        <section id="menuView" hidden>
+            <div class="menu-toolbar">
+                <div>
+                    <h2 class="menu-heading">Menu</h2>
+                    <p class="admin-sub" id="menuState">&nbsp;</p>
+                </div>
+                <div class="menu-toolbar-actions">
+                    <button class="btn btn-ghost btn-sm" id="importMenuBtn">Import current menu</button>
+                    <button class="btn btn-primary btn-sm" id="addDishBtn">Add dish</button>
+                </div>
+            </div>
+
+            <form class="dish-form" id="dishForm" hidden>
+                <h3 id="dishFormTitle">Add a dish</h3>
+                <div class="dish-grid">
+                    <label>Dish name
+                        <input type="text" id="dishName" required maxlength="80">
+                    </label>
+                    <label>Category
+                        <select id="dishCategory" required></select>
+                    </label>
+                    <label>Type
+                        <select id="dishType" required>
+                            <option value="veg">Veg</option>
+                            <option value="non-veg">Non-Veg</option>
+                        </select>
+                    </label>
+                    <label>Half price (Rs.)
+                        <input type="number" id="dishHalf" min="0" max="100000" placeholder="leave blank if none">
+                    </label>
+                    <label>Full price (Rs.)
+                        <input type="number" id="dishFull" min="0" max="100000" required>
+                    </label>
+                    <label>Image URL (optional)
+                        <input type="url" id="dishImage" maxlength="500" placeholder="https://...">
+                    </label>
+                </div>
+                <div class="dish-form-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" id="cancelDishBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="saveDishBtn">Save dish</button>
+                </div>
+                <p class="dish-error" id="dishError" hidden></p>
+            </form>
+
+            <div class="menu-filters" id="menuCategoryFilters"></div>
+            <main id="dishList"><p class="admin-empty">Loading menu...</p></main>
+        </section>
     </div>
 
     <script type="module" src="../js/admin.js"></script>

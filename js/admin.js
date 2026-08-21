@@ -3,7 +3,8 @@ import {
     getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
 import {
-    getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp
+    getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc,
+    getDoc, setDoc, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import { firebaseConfig, FIREBASE_NOT_CONFIGURED } from './firebase-config.js';
 
@@ -204,3 +205,236 @@ function render() {
         btn.addEventListener('click', () => setStatus(btn.dataset.id, btn.dataset.to));
     });
 }
+
+
+// ---------------------------------------------------------------- Menu editor
+
+const CATEGORIES = [
+    ['non-veg-rice', 'Non-Veg Chinese Rice'],
+    ['veg-rice', 'Veg Chinese Rice'],
+    ['non-veg-noodles', 'Non-Veg Noodles'],
+    ['veg-noodles', 'Veg Noodles'],
+    ['non-veg-starter', 'Non-Veg Starter'],
+    ['veg-starter', 'Veg Starter'],
+    ['non-veg-soup', 'Non-Veg Soup'],
+    ['veg-soup', 'Veg Soup'],
+    ['tandoor', 'Special Tandoor'],
+    ['special', 'Pinch of Spice Special']
+];
+
+const menuState = { items: [], filter: 'all', editingId: null, saving: false };
+
+const dishForm = document.getElementById('dishForm');
+const dishError = document.getElementById('dishError');
+const menuStateLabel = document.getElementById('menuState');
+const dishList = document.getElementById('dishList');
+
+function setMenuState(msg, isError) {
+    menuStateLabel.textContent = msg;
+    menuStateLabel.classList.toggle('is-error', Boolean(isError));
+}
+
+// Tabs
+document.querySelectorAll('.admin-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        const showMenu = tab.dataset.view === 'menu';
+        document.getElementById('ordersView').hidden = showMenu;
+        document.getElementById('menuView').hidden = !showMenu;
+        if (showMenu && !menuState.items.length) loadMenu();
+    });
+});
+
+function fillCategorySelect() {
+    const sel = document.getElementById('dishCategory');
+    sel.innerHTML = CATEGORIES.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+}
+
+async function loadMenu() {
+    setMenuState('Loading...');
+    try {
+        const snap = await getDoc(doc(db, 'menu', 'current'));
+        menuState.items = snap.exists() && Array.isArray(snap.data().items) ? snap.data().items : [];
+        setMenuState(menuState.items.length
+            ? `${menuState.items.length} dishes`
+            : 'No menu saved yet - use "Import current menu" to start from the existing 66 dishes.');
+    } catch (err) {
+        setMenuState(`Could not load the menu: ${err.code || err.message}`, true);
+    }
+    renderMenu();
+}
+
+async function saveMenu(successMsg) {
+    if (menuState.saving) return false;
+    menuState.saving = true;
+    setMenuState('Saving...');
+    try {
+        await setDoc(doc(db, 'menu', 'current'), {
+            items: menuState.items,
+            updatedAt: serverTimestamp()
+        });
+        setMenuState(successMsg || `${menuState.items.length} dishes - saved`);
+        return true;
+    } catch (err) {
+        setMenuState(`Could not save: ${err.code || err.message}`, true);
+        return false;
+    } finally {
+        menuState.saving = false;
+    }
+}
+
+// Seed Firestore from the menu bundled with the customer site
+document.getElementById('importMenuBtn').addEventListener('click', async () => {
+    if (menuState.items.length &&
+        !confirm('This replaces the saved menu with the 66 dishes from the website file. Continue?')) return;
+    try {
+        const res = await fetch('../js/menu-data.js');
+        const text = await res.text();
+        const start = text.indexOf('[');
+        const end = text.lastIndexOf(']');
+        // The file is a JS literal, not JSON, so evaluate just the array portion
+        // eslint-disable-next-line no-new-func
+        const items = Function(`return ${text.slice(start, end + 1)}`)();
+        menuState.items = items.map((i) => ({ ...i, available: i.available !== false }));
+        if (await saveMenu(`Imported ${menuState.items.length} dishes`)) renderMenu();
+    } catch (err) {
+        setMenuState(`Import failed: ${err.message}`, true);
+    }
+});
+
+// Add / edit
+document.getElementById('addDishBtn').addEventListener('click', () => openDishForm(null));
+document.getElementById('cancelDishBtn').addEventListener('click', () => { dishForm.hidden = true; });
+
+function openDishForm(dish) {
+    menuState.editingId = dish ? dish.id : null;
+    document.getElementById('dishFormTitle').textContent = dish ? `Edit ${dish.name}` : 'Add a dish';
+    document.getElementById('dishName').value = dish?.name || '';
+    document.getElementById('dishCategory').value = dish?.category || CATEGORIES[0][0];
+    document.getElementById('dishType').value = dish?.type || 'veg';
+    document.getElementById('dishImage').value = dish?.image || '';
+    const half = dish?.prices?.find((p) => p.size === 'Half');
+    const full = dish?.prices?.find((p) => p.size === 'Full');
+    document.getElementById('dishHalf').value = half ? half.price : '';
+    document.getElementById('dishFull').value = full ? full.price : (dish?.prices?.[0]?.price ?? '');
+    dishError.hidden = true;
+    dishForm.hidden = false;
+    dishForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+dishForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    dishError.hidden = true;
+
+    const name = document.getElementById('dishName').value.trim();
+    const category = document.getElementById('dishCategory').value;
+    const halfRaw = document.getElementById('dishHalf').value.trim();
+    const fullRaw = document.getElementById('dishFull').value.trim();
+    const full = Number(fullRaw);
+
+    if (!name) return showDishError('Give the dish a name.');
+    if (!Number.isFinite(full) || full <= 0) return showDishError('Full price must be more than 0.');
+    const prices = [];
+    if (halfRaw !== '') {
+        const half = Number(halfRaw);
+        if (!Number.isFinite(half) || half <= 0) return showDishError('Half price must be more than 0, or left blank.');
+        if (half >= full) return showDishError('Half price should be less than the full price.');
+        prices.push({ size: 'Half', price: half });
+    }
+    prices.push({ size: 'Full', price: full });
+
+    const dish = {
+        id: menuState.editingId ?? (Math.max(0, ...menuState.items.map((i) => Number(i.id) || 0)) + 1),
+        name,
+        category,
+        categoryDisplay: CATEGORIES.find(([v]) => v === category)[1],
+        type: document.getElementById('dishType').value,
+        image: document.getElementById('dishImage').value.trim(),
+        prices,
+        available: true
+    };
+
+    if (menuState.editingId != null) {
+        const idx = menuState.items.findIndex((i) => i.id === menuState.editingId);
+        dish.available = menuState.items[idx]?.available !== false;
+        menuState.items[idx] = dish;
+    } else {
+        menuState.items.push(dish);
+    }
+
+    if (await saveMenu()) {
+        dishForm.hidden = true;
+        renderMenu();
+    }
+});
+
+function showDishError(msg) {
+    dishError.textContent = msg;
+    dishError.hidden = false;
+}
+
+async function toggleDish(id) {
+    const dish = menuState.items.find((i) => i.id === id);
+    if (!dish) return;
+    dish.available = dish.available === false;
+    if (await saveMenu()) renderMenu();
+}
+
+async function deleteDish(id) {
+    const dish = menuState.items.find((i) => i.id === id);
+    if (!dish) return;
+    if (!confirm(`Remove "${dish.name}" from the menu permanently?\n\nTo hide it temporarily instead, use "Sold out".`)) return;
+    menuState.items = menuState.items.filter((i) => i.id !== id);
+    if (await saveMenu()) renderMenu();
+}
+
+function renderMenu() {
+    const filters = document.getElementById('menuCategoryFilters');
+    filters.innerHTML = [['all', 'All']].concat(CATEGORIES).map(([v, l]) => {
+        const n = v === 'all' ? menuState.items.length : menuState.items.filter((i) => i.category === v).length;
+        return `<button class="filter-btn ${menuState.filter === v ? 'active' : ''}" data-cat="${v}">${l} (${n})</button>`;
+    }).join('');
+    filters.querySelectorAll('button').forEach((b) => {
+        b.addEventListener('click', () => { menuState.filter = b.dataset.cat; renderMenu(); });
+    });
+
+    const shown = menuState.filter === 'all'
+        ? menuState.items
+        : menuState.items.filter((i) => i.category === menuState.filter);
+
+    if (!shown.length) {
+        dishList.innerHTML = '<p class="admin-empty">No dishes here yet.</p>';
+        return;
+    }
+
+    dishList.innerHTML = shown.map((d) => {
+        const price = (d.prices || []).map((p) => `${p.size} Rs.${p.price}`).join('  &middot;  ');
+        const out = d.available === false;
+        return `
+        <article class="dish-row ${out ? 'is-out' : ''}">
+            <span class="dish-dot ${esc(d.type)}"></span>
+            <div class="dish-main">
+                <h3>${esc(d.name)}${out ? ' <span class="dish-out-tag">Sold out</span>' : ''}</h3>
+                <p>${esc(d.categoryDisplay || d.category)}</p>
+                <p class="dish-price">${price}</p>
+            </div>
+            <div class="dish-actions">
+                <button class="btn-ghost btn-sm" data-act="edit" data-id="${d.id}">Edit</button>
+                <button class="btn-ghost btn-sm" data-act="toggle" data-id="${d.id}">${out ? 'Back on' : 'Sold out'}</button>
+                <button class="btn-ghost btn-sm is-danger" data-act="delete" data-id="${d.id}">Delete</button>
+            </div>
+        </article>`;
+    }).join('');
+
+    dishList.querySelectorAll('button[data-act]').forEach((b) => {
+        const id = Number(b.dataset.id);
+        b.addEventListener('click', () => {
+            if (b.dataset.act === 'edit') openDishForm(menuState.items.find((i) => i.id === id));
+            else if (b.dataset.act === 'toggle') toggleDish(id);
+            else deleteDish(id);
+        });
+    });
+}
+
+fillCategorySelect();

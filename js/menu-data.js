@@ -614,3 +614,6 @@ const menuData = [
         prices: [{ size: "Full", price: 280 }]
     }
 ];
+
+// Expose for the Firestore menu loader's offline fallback
+window.menuData = menuData;

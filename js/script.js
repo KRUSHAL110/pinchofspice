@@ -2,7 +2,12 @@
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // The menu may come from Firestore; wait for it before rendering anything
+    if (window.menuReady) {
+        try { await window.menuReady; } catch (e) { console.warn('[menu] load failed', e); }
+    }
+
     initializeMenu();
     initializeNavigation();
     initializeCart();
@@ -53,7 +58,8 @@ function initializeMenu() {
 // Render menu items based on filter
 function renderMenuItems(filter) {
     const menuGrid = document.getElementById('menuGrid');
-    let filteredItems = filter === 'all' ? menuData : menuData.filter(item => item.category === filter);
+    const menu = window.menuData || [];
+    let filteredItems = filter === 'all' ? menu : menu.filter(item => item.category === filter);
 
     menuGrid.innerHTML = '';
 
@@ -74,7 +80,7 @@ function searchMenuItems(searchTerm) {
     }
 
     // Filter items based on search term
-    const filteredItems = menuData.filter(item => {
+    const filteredItems = (window.menuData || []).filter(item => {
         const itemName = item.name.toLowerCase();
         const itemCategory = item.categoryDisplay.toLowerCase();
         return itemName.includes(searchTerm) || itemCategory.includes(searchTerm);
@@ -146,7 +152,7 @@ function createMenuCard(item) {
 
 // Add item to cart
 function addToCart(itemId) {
-    const item = menuData.find(i => i.id === itemId);
+    const item = (window.menuData || []).find(i => i.id === itemId);
     if (!item) return;
 
     // Get selected size
