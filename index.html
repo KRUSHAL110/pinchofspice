@@ -291,51 +291,21 @@
                         </div>
                     </div>
 
-                    <!-- Payment Options -->
+                    <!-- Payment -->
                     <div class="payment-section">
-                        <h3>Select Payment Method</h3>
-                        <div class="payment-options">
-                            <label class="payment-option">
-                                <input type="radio" name="paymentMethod" value="razorpay" required>
-                                <div class="payment-card">
-                                    <div class="payment-icon">&#127974;</div>
-                                    <div class="payment-info">
-                                        <strong>Card, UPI or Netbanking</strong>
-                                        <p>Pay securely online now</p>
-                                    </div>
-                                </div>
-                            </label>
-                            <label class="payment-option">
-                                <input type="radio" name="paymentMethod" value="paytm" required>
-                                <div class="payment-card">
-                                    <div class="payment-icon">💳</div>
-                                    <div class="payment-info">
-                                        <strong>Paytm / UPI</strong>
-                                        <p>Pay using Paytm or any UPI app</p>
-                                    </div>
-                                </div>
-                            </label>
-                            <label class="payment-option">
-                                <input type="radio" name="paymentMethod" value="phonepe" required>
-                                <div class="payment-card">
-                                    <div class="payment-icon">📱</div>
-                                    <div class="payment-info">
-                                        <strong>PhonePe</strong>
-                                        <p>Pay using PhonePe</p>
-                                    </div>
-                                </div>
-                            </label>
-                            <label class="payment-option">
-                                <input type="radio" name="paymentMethod" value="cod" required>
-                                <div class="payment-card">
-                                    <div class="payment-icon">💵</div>
-                                    <div class="payment-info">
-                                        <strong>Cash on Delivery</strong>
-                                        <p>Pay when you receive</p>
-                                    </div>
-                                </div>
-                            </label>
+                        <div class="pay-method">
+                            <div class="pay-method-head">
+                                <span class="pay-method-title">Secure online payment</span>
+                                <span class="pay-secure-badge">&#128274; Encrypted</span>
+                            </div>
+                            <p class="pay-method-sub">Pay by UPI, credit or debit card, netbanking or wallet.</p>
+                            <div class="pay-brands">
+                                <span>UPI</span><span>GPay</span><span>PhonePe</span><span>Paytm</span>
+                                <span>Visa</span><span>Mastercard</span><span>RuPay</span><span>Netbanking</span>
+                            </div>
+                            <p class="pay-powered">Payments processed by <strong>Razorpay</strong>. Your card details never reach us.</p>
                         </div>
+                        <input type="hidden" name="paymentMethod" value="razorpay">
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block">Continue to Payment</button>
@@ -348,23 +318,18 @@
     <div class="modal" id="paymentModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Complete Payment</h2>
+                <h2>Confirm &amp; Pay</h2>
                 <span class="close-modal">&times;</span>
             </div>
             <div class="modal-body">
                 <div id="paymentDetails" class="payment-details">
                     <!-- Payment details will be shown here based on selected method -->
                 </div>
-                <div class="payment-confirmation">
-                    <label class="confirm-checkbox">
-                        <input type="checkbox" id="paymentConfirmed">
-                        <span>I have completed the payment (skip for Cash on Delivery)</span>
-                    </label>
-                </div>
+                <input type="checkbox" id="paymentConfirmed" hidden>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary close-modal">Cancel</button>
-                <button class="btn btn-primary" id="confirmOrderBtn" disabled>Send Order on WhatsApp</button>
+                <button class="btn btn-primary" id="confirmOrderBtn">Pay Now</button>
             </div>
         </div>
     </div>

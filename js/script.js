@@ -333,35 +333,20 @@ function showCheckout() {
 
 // Initialize forms
 function initializeForms() {
-    // Don't offer online payment until the payment API is live
-    if (!PAYMENT_API_BASE) {
-        const online = document.querySelector('input[name="paymentMethod"][value="razorpay"]');
-        if (online) online.closest('.payment-option').style.display = 'none';
-    }
 
     const checkoutForm = document.getElementById('checkoutForm');
     const contactForm = document.getElementById('contactForm');
     const closeSuccessBtn = document.getElementById('closeSuccess');
-    const paymentConfirmedCheckbox = document.getElementById('paymentConfirmed');
     const confirmOrderBtn = document.getElementById('confirmOrderBtn');
     let pendingOrderData = null;
     let pendingOrderRef = null;
-
-    // Handle payment confirmation checkbox
-    paymentConfirmedCheckbox.addEventListener('change', (e) => {
-        confirmOrderBtn.disabled = !e.target.checked;
-    });
 
     // Handle checkout form submission - Show payment modal
     checkoutForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
         // Get selected payment method
-        const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked');
-        if (!selectedPayment) {
-            alert('Please select a payment method');
-            return;
-        }
+        const selectedPayment = document.querySelector('input[name="paymentMethod"]');
 
         // Store order data
         pendingOrderData = {
@@ -382,15 +367,11 @@ function initializeForms() {
         pendingOrderRef = buildOrderRef();
 
         // Show payment details based on selected method
-        showPaymentDetails(selectedPayment.value, pendingOrderData.total, pendingOrderRef);
+        showPaymentDetails(selectedPayment.value, pendingOrderData.total, pendingOrderRef, pendingOrderData);
 
         // Nothing to pay up front on COD, so don't gate the button behind the checkbox
-        const isCod = selectedPayment.value === 'cod';
-        const isOnline = selectedPayment.value === 'razorpay';
-        confirmOrderBtn.textContent = isOnline ? 'Pay and send order' : 'Send Order on WhatsApp';
-        paymentConfirmedCheckbox.checked = false;
-        paymentConfirmedCheckbox.closest('.payment-confirmation').style.display = (isCod || isOnline) ? 'none' : '';
-        confirmOrderBtn.disabled = !(isCod || isOnline);
+        confirmOrderBtn.textContent = `Pay Rs.${pendingOrderData.total}`;
+        confirmOrderBtn.disabled = false;
 
         // Close checkout modal and show payment modal
         document.getElementById('checkoutModal').classList.remove('active');
@@ -413,11 +394,11 @@ function initializeForms() {
             } catch (err) {
                 showNotification(err.message);
                 confirmOrderBtn.disabled = false;
-                confirmOrderBtn.textContent = 'Pay and send order';
+                confirmOrderBtn.textContent = `Pay Rs.${pendingOrderData.total}`;
                 return;
             }
             confirmOrderBtn.disabled = false;
-            confirmOrderBtn.textContent = 'Pay and send order';
+            confirmOrderBtn.textContent = `Pay Rs.${pendingOrderData.total}`;
             if (!paymentId) return; // customer closed the payment window
         }
 
@@ -441,8 +422,7 @@ function initializeForms() {
         document.getElementById('successModal').classList.add('active');
 
         checkoutForm.reset();
-        paymentConfirmedCheckbox.checked = false;
-        confirmOrderBtn.disabled = true;
+        confirmOrderBtn.disabled = false;
         pendingOrderData = null;
         pendingOrderRef = null;
     });
@@ -593,55 +573,33 @@ function buildWhatsAppMessage(order, orderRef, paymentId) {
 }
 
 // Show payment details based on selected method
-function showPaymentDetails(paymentMethod, amount, orderRef) {
+function showPaymentDetails(paymentMethod, amount, orderRef, order) {
     const paymentDetails = document.getElementById('paymentDetails');
-    const upiLink = buildUpiLink(amount, orderRef);
+    const lines = (order?.items || []).map((it) => `
+        <li>
+            <span>${it.name} <em>(${it.size})</em> &times;${it.quantity}</span>
+            <span>Rs.${it.price * it.quantity}</span>
+        </li>`).join('');
 
-    if (paymentMethod === 'razorpay') {
-        paymentDetails.innerHTML = `
-            <h3>Pay Rs.${amount} online</h3>
-            <div class="payment-upi">
-                <p class="upi-hint">Card, UPI, wallet or netbanking. Your payment is confirmed
-                before the order is sent, so nothing is left uncertain.</p>
-                <p class="upi-ref">Order reference <strong>${orderRef}</strong></p>
-                <p class="upi-amount">Amount: Rs.${amount}</p>
+    paymentDetails.innerHTML = `
+        <div class="pay-summary">
+            <div class="pay-ref">Order <strong>${orderRef}</strong></div>
+            <ul class="pay-lines">${lines}</ul>
+            <div class="pay-total">
+                <span>Total to pay</span>
+                <strong>Rs.${amount}</strong>
             </div>
-        `;
-        return;
-    }
-
-    if (paymentMethod === 'paytm' || paymentMethod === 'phonepe') {
-        const appName = paymentMethod === 'phonepe' ? 'PhonePe' : 'Paytm / UPI';
-        paymentDetails.innerHTML = `
-            <h3>Pay Rs.${amount} via ${appName}</h3>
-            <div class="payment-upi">
-                <a class="btn btn-primary upi-pay-btn" href="${upiLink}">Pay Rs.${amount} now</a>
-                <p class="upi-hint">Opens your UPI app with the amount already filled in.</p>
-
-                <div class="upi-divider"><span>or pay manually</span></div>
-
-                <div class="payment-qr">
-                    <img src="images/payment/paytm-qr.jpg" alt="UPI QR Code" onerror="this.parentElement.style.display='none'">
-                </div>
-                <div class="upi-id">
-                    <span>UPI ID</span>
-                    <strong>${UPI_VPA}</strong>
-                </div>
-                <p class="upi-ref">Please add reference <strong>${orderRef}</strong> in the payment note.</p>
-                <p class="upi-amount">Amount: Rs.${amount}</p>
+            <div class="pay-deliver">
+                <span>Delivering to</span>
+                <p>${order?.customer?.name || ''} &middot; ${order?.customer?.phone || ''}</p>
+                <p>${order?.customer?.address || ''}</p>
             </div>
-        `;
-    } else if (paymentMethod === 'cod') {
-        paymentDetails.innerHTML = `
-            <h3>Cash on Delivery</h3>
-            <div class="payment-upi">
-                <div class="cod-icon">&#128181;</div>
-                <h4>Pay when you receive your order</h4>
-                <p class="upi-hint">Please keep exact change ready if you can.</p>
-                <p class="upi-amount">Amount to pay: Rs.${amount}</p>
-            </div>
-        `;
-    }
+            <p class="pay-reassure">
+                &#128274; You'll pay on Razorpay's secure window. Your order is only placed
+                once the payment is confirmed &mdash; close it and nothing is charged.
+            </p>
+        </div>
+    `;
 }
 
 // Initialize navigation
