@@ -339,6 +339,7 @@ function initializeForms() {
     const paymentConfirmedCheckbox = document.getElementById('paymentConfirmed');
     const confirmOrderBtn = document.getElementById('confirmOrderBtn');
     let pendingOrderData = null;
+    let pendingOrderRef = null;
 
     // Handle payment confirmation checkbox
     paymentConfirmedCheckbox.addEventListener('change', (e) => {
@@ -370,8 +371,12 @@ function initializeForms() {
             timestamp: new Date().toISOString()
         };
 
+        // One reference shared by the UPI note and the WhatsApp message, so the
+        // kitchen can match an incoming payment to an incoming order
+        pendingOrderRef = buildOrderRef();
+
         // Show payment details based on selected method
-        showPaymentDetails(selectedPayment.value);
+        showPaymentDetails(selectedPayment.value, pendingOrderData.total, pendingOrderRef);
 
         // Nothing to pay up front on COD, so don't gate the button behind the checkbox
         const isCod = selectedPayment.value === 'cod';
@@ -388,7 +393,7 @@ function initializeForms() {
     confirmOrderBtn.addEventListener('click', () => {
         if (!pendingOrderData) return;
 
-        const orderRef = buildOrderRef();
+        const orderRef = pendingOrderRef || buildOrderRef();
         const waUrl = `https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(buildWhatsAppMessage(pendingOrderData, orderRef))}`;
 
         // Opened synchronously from the click so mobile browsers don't block it
@@ -406,6 +411,7 @@ function initializeForms() {
         paymentConfirmedCheckbox.checked = false;
         confirmOrderBtn.disabled = true;
         pendingOrderData = null;
+        pendingOrderRef = null;
     });
 
     // Handle contact form submission
@@ -423,6 +429,23 @@ function initializeForms() {
 
 // Restaurant WhatsApp number in international format (no + or spaces)
 const RESTAURANT_WHATSAPP = '918451876111';
+
+// UPI payee. Money goes straight from the customer to this VPA - no gateway, no fee.
+const UPI_VPA = 'pratikchavan3996-7@okhdfcbank';
+const UPI_PAYEE_NAME = 'Pinch of Spice';
+
+// Builds a UPI intent link. Tapping it on a phone opens GPay / PhonePe / Paytm
+// with the payee, amount and order reference already filled in.
+function buildUpiLink(amount, orderRef) {
+    const params = new URLSearchParams({
+        pa: UPI_VPA,
+        pn: UPI_PAYEE_NAME,
+        am: String(amount),
+        cu: 'INR',
+        tn: `Pinch of Spice ${orderRef}`
+    });
+    return `upi://pay?${params.toString()}`;
+}
 
 const PAYMENT_LABELS = {
     paytm: 'Paytm / UPI',
@@ -463,51 +486,39 @@ function buildWhatsAppMessage(order, orderRef) {
 }
 
 // Show payment details based on selected method
-function showPaymentDetails(paymentMethod) {
+function showPaymentDetails(paymentMethod, amount, orderRef) {
     const paymentDetails = document.getElementById('paymentDetails');
+    const upiLink = buildUpiLink(amount, orderRef);
 
-    if (paymentMethod === 'paytm') {
+    if (paymentMethod === 'paytm' || paymentMethod === 'phonepe') {
+        const appName = paymentMethod === 'phonepe' ? 'PhonePe' : 'Paytm / UPI';
         paymentDetails.innerHTML = `
-            <h3>Pay via Paytm / UPI</h3>
+            <h3>Pay Rs.${amount} via ${appName}</h3>
             <div class="payment-upi">
-                <h4>Scan QR Code or Use UPI ID</h4>
+                <a class="btn btn-primary upi-pay-btn" href="${upiLink}">Pay Rs.${amount} now</a>
+                <p class="upi-hint">Opens your UPI app with the amount already filled in.</p>
+
+                <div class="upi-divider"><span>or pay manually</span></div>
+
                 <div class="payment-qr">
-                    <img src="images/payment/paytm-qr.jpg" alt="Paytm QR Code" onerror="this.style.display='none'">
+                    <img src="images/payment/paytm-qr.jpg" alt="UPI QR Code" onerror="this.parentElement.style.display='none'">
                 </div>
                 <div class="upi-id">
-                    <span>📱</span>
-                    <span>pratikchavan3996-7@okhdfcbank</span>
+                    <span>UPI ID</span>
+                    <strong>${UPI_VPA}</strong>
                 </div>
-                <p style="color: #666; margin-top: 1rem;">Or UPI ID: <strong>paytmqr6l08wo@ptys</strong></p>
-                <p style="color: var(--primary-color); font-weight: bold; margin-top: 1rem;">
-                    Amount: ₹${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
-                </p>
-            </div>
-        `;
-    } else if (paymentMethod === 'phonepe') {
-        paymentDetails.innerHTML = `
-            <h3>Pay via PhonePe</h3>
-            <div class="payment-upi">
-                <h4>Call or Send Payment to</h4>
-                <div class="phone-number">
-                    📞 8451876111
-                </div>
-                <p style="color: #666; margin: 1rem 0;">You can also use PhonePe to send payment to this number</p>
-                <p style="color: var(--primary-color); font-weight: bold; margin-top: 1rem;">
-                    Amount: ₹${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
-                </p>
+                <p class="upi-ref">Please add reference <strong>${orderRef}</strong> in the payment note.</p>
+                <p class="upi-amount">Amount: Rs.${amount}</p>
             </div>
         `;
     } else if (paymentMethod === 'cod') {
         paymentDetails.innerHTML = `
             <h3>Cash on Delivery</h3>
             <div class="payment-upi">
-                <div style="font-size: 4rem; margin: 1rem 0;">💵</div>
+                <div class="cod-icon">&#128181;</div>
                 <h4>Pay when you receive your order</h4>
-                <p style="color: #666; margin: 1rem 0;">Please keep exact change ready</p>
-                <p style="color: var(--primary-color); font-weight: bold; margin-top: 1rem;">
-                    Amount to Pay: ₹${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
-                </p>
+                <p class="upi-hint">Please keep exact change ready if you can.</p>
+                <p class="upi-amount">Amount to pay: Rs.${amount}</p>
             </div>
         `;
     }
