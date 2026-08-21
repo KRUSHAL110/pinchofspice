@@ -209,19 +209,35 @@ function initializeCart() {
         cartModal.classList.add('active');
     });
 
-    // Close modals
+    // Close modals. Close whichever modal the button actually sits in, rather than
+    // a hard-coded list - the old version silently missed the payment modal.
     closeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            cartModal.classList.remove('active');
-            checkoutModal.classList.remove('active');
-            document.getElementById('successModal').classList.remove('active');
+            const modal = btn.closest('.modal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.dispatchEvent(new CustomEvent('modal:closed', { detail: { id: modal.id } }));
+            } else {
+                document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+            }
         });
+    });
+
+    // Escape closes the top-most open modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        const open = document.querySelector('.modal.active');
+        if (open) {
+            open.classList.remove('active');
+            document.dispatchEvent(new CustomEvent('modal:closed', { detail: { id: open.id } }));
+        }
     });
 
     // Close modal on outside click
     window.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) {
             e.target.classList.remove('active');
+            document.dispatchEvent(new CustomEvent('modal:closed', { detail: { id: e.target.id } }));
         }
     });
 
@@ -376,6 +392,15 @@ function initializeForms() {
         // Close checkout modal and show payment modal
         document.getElementById('checkoutModal').classList.remove('active');
         document.getElementById('paymentModal').classList.add('active');
+    });
+
+    // Abandoning the payment modal must clear the pending order
+    document.addEventListener('modal:closed', (e) => {
+        if (e.detail?.id !== 'paymentModal') return;
+        pendingOrderData = null;
+        pendingOrderRef = null;
+        confirmOrderBtn.disabled = false;
+        confirmOrderBtn.textContent = 'Pay Now';
     });
 
     // Handle confirm order button - send the order to the restaurant on WhatsApp

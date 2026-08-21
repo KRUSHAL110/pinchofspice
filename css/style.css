@@ -1651,3 +1651,56 @@ section {
 }
 
 #confirmOrderBtn { min-width: 170px; }
+
+/* The default .btn-secondary is white-on-transparent for the dark hero.
+   Inside a light modal footer it needs real contrast. */
+.modal-footer .btn-secondary {
+    background: #fff;
+    color: #555;
+    border: 2px solid var(--border-color);
+    box-shadow: none;
+}
+
+.modal-footer .btn-secondary:hover {
+    background: var(--light-color);
+    color: var(--dark-color);
+    border-color: #bbb;
+    transform: none;
+    box-shadow: none;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* The close "x" needs to be an obvious, comfortably tappable target */
+.close-modal {
+    cursor: pointer;
+    line-height: 1;
+    user-select: none;
+}
+
+span.close-modal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    color: #888;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+span.close-modal:hover {
+    background: var(--light-color);
+    color: var(--dark-color);
+}
+
+@media (max-width: 480px) {
+    .modal-footer { flex-direction: column-reverse; }
+    .modal-footer .btn { width: 100%; }
+}
