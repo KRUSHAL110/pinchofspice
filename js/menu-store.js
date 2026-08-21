@@ -9,6 +9,9 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.18
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import { firebaseConfig, FIREBASE_NOT_CONFIGURED } from './firebase-config.js';
 
+// Below this many dishes we assume the saved menu is a mistake, not a real menu
+const MIN_REAL_MENU = 5;
+
 function bundledMenu() {
     return Array.isArray(window.menuData) ? window.menuData : [];
 }
@@ -22,8 +25,19 @@ async function loadMenu() {
 
         if (snap.exists()) {
             const items = snap.data().items;
-            if (Array.isArray(items) && items.length) {
+            const live = Array.isArray(items) ? items.filter((i) => i.available !== false) : [];
+
+            // A near-empty saved menu almost always means a mistake in the admin
+            // panel, not a genuinely tiny menu. Merge the bundled dishes in rather
+            // than showing customers a one-item restaurant.
+            if (live.length >= MIN_REAL_MENU) {
                 return { items, source: 'firestore' };
+            }
+            if (live.length) {
+                const names = new Set(live.map((i) => String(i.name).trim().toLowerCase()));
+                const extra = bundledMenu().filter((b) => !names.has(String(b.name).trim().toLowerCase()));
+                console.warn(`[menu] only ${live.length} saved dishes - showing the bundled menu alongside them`);
+                return { items: live.concat(extra), source: 'firestore + bundled' };
             }
         }
     } catch (err) {

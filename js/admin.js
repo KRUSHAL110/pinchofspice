@@ -296,8 +296,6 @@ async function saveMenu(successMsg) {
 
 // Seed Firestore from the menu bundled with the customer site
 document.getElementById('importMenuBtn').addEventListener('click', async () => {
-    if (menuState.items.length &&
-        !confirm('This replaces the saved menu with the 66 dishes from the website file. Continue?')) return;
     try {
         const res = await fetch('../js/menu-data.js');
         const text = await res.text();
@@ -305,9 +303,23 @@ document.getElementById('importMenuBtn').addEventListener('click', async () => {
         const end = text.lastIndexOf(']');
         // The file is a JS literal, not JSON, so evaluate just the array portion
         // eslint-disable-next-line no-new-func
-        const items = Function(`return ${text.slice(start, end + 1)}`)();
-        menuState.items = items.map((i) => ({ ...i, available: i.available !== false }));
-        if (await saveMenu(`Imported ${menuState.items.length} dishes`)) renderMenu();
+        const bundled = Function(`return ${text.slice(start, end + 1)}`)();
+
+        // Merge rather than replace: dishes you added by hand must survive an import
+        const haveNames = new Set(menuState.items.map((i) => String(i.name).trim().toLowerCase()));
+        let nextId = Math.max(0, ...menuState.items.map((i) => Number(i.id) || 0));
+        const additions = bundled
+            .filter((b) => !haveNames.has(String(b.name).trim().toLowerCase()))
+            .map((b) => ({ ...b, id: ++nextId, available: b.available !== false }));
+
+        if (!additions.length) {
+            setMenuState('Nothing to import - every dish from the website file is already here.');
+            return;
+        }
+        if (!confirm(`Add ${additions.length} dishes from the website file?\n\nYour existing ${menuState.items.length} dish(es) are kept.`)) return;
+
+        menuState.items = menuState.items.concat(additions);
+        if (await saveMenu(`Imported ${additions.length} dishes - ${menuState.items.length} total`)) renderMenu();
     } catch (err) {
         setMenuState(`Import failed: ${err.message}`, true);
     }
