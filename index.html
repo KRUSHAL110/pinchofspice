@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinch of Spice - Kitchen and Grill | Order Online</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <div class="logo">
+                    <h1>Pinch of Spice</h1>
+                    <p class="tagline">Kitchen and Grill</p>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#home" class="nav-link active">Home</a></li>
+                    <li><a href="#menu" class="nav-link">Menu</a></li>
+                    <li><a href="#about" class="nav-link">About</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <div class="cart-icon" id="cartIcon">
+                    <span class="cart-count">0</span>
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 2L7 4M17 2L19 4M3 8H21M5 8L7 20H17L19 8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to Pinch of Spice</h1>
+            <p class="hero-subtitle">Authentic Indian Cuisine with a Modern Touch</p>
+            <p class="hero-description">Experience the perfect blend of traditional flavors and contemporary dining</p>
+            <div class="hero-buttons">
+                <a href="#menu" class="btn btn-primary">Order Now</a>
+                <a href="#contact" class="btn btn-secondary">Contact Us</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="menu-section">
+        <div class="container">
+            <h2 class="section-title">Our Menu</h2>
+            <p class="section-subtitle">Delicious Veg & Non-Veg Dishes</p>
+
+            <!-- Search Box -->
+            <div class="menu-search">
+                <input type="text" id="menuSearch" placeholder="Search for dishes (e.g., Chicken Peri Peri, Biryani, Noodles...)" autocomplete="off">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+
+            <!-- Menu Filters -->
+            <div class="menu-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="non-veg-rice">Non-Veg Rice</button>
+                <button class="filter-btn" data-filter="veg-rice">Veg Rice</button>
+                <button class="filter-btn" data-filter="non-veg-noodles">Non-Veg Noodles</button>
+                <button class="filter-btn" data-filter="veg-noodles">Veg Noodles</button>
+                <button class="filter-btn" data-filter="non-veg-starter">Non-Veg Starter</button>
+                <button class="filter-btn" data-filter="veg-starter">Veg Starter</button>
+                <button class="filter-btn" data-filter="non-veg-soup">Non-Veg Soup</button>
+                <button class="filter-btn" data-filter="veg-soup">Veg Soup</button>
+                <button class="filter-btn" data-filter="tandoor">Tandoor</button>
+                <button class="filter-btn" data-filter="special">Pinch of Spice Special</button>
+            </div>
+
+            <!-- Menu Items Container -->
+            <div class="menu-grid" id="menuGrid">
+                <!-- Menu items will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title">About Pinch of Spice</h2>
+            <p class="section-subtitle">Your Destination for Authentic Indian Cuisine in Mangaon</p>
+
+            <!-- Restaurant Story -->
+            <div class="about-story">
+                <div class="story-content">
+                    <div class="story-text">
+                        <h3>Our Story</h3>
+                        <p>Welcome to Pinch of Spice Kitchen and Grill, where culinary passion meets tradition. Located in the heart of Mangaon, Maharashtra, we've been serving the community with authentic Indian cuisine that brings together the best of traditional flavors and modern cooking techniques.</p>
+                        <p>What started as a dream to serve delicious, quality food has grown into a beloved local restaurant. Every dish we prepare is a testament to our commitment to excellence, using only the freshest ingredients and time-honored recipes.</p>
+                        <p>From our signature Chinese rice dishes to our mouth-watering tandoor specialties, each plate is crafted with love, care, and a generous pinch of spice that makes our food truly special.</p>
+                    </div>
+                    <div class="restaurant-image">
+                        <img src="images/restaurant/restaurant-front.jpg" alt="Pinch of Spice Restaurant" class="main-restaurant-img" onerror="this.src='https://images.pexels.com/photos/2696064/pexels-photo-2696064.jpeg?auto=compress&cs=tinysrgb&w=800'">
+                        <div class="image-badge">
+                            <span>📍 Kacheri Rd, Mangaon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="restaurant-stats">
+                <div class="stat-item">
+                    <span class="stat-number">66+</span>
+                    <span class="stat-label">Menu Items</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Fresh Ingredients</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">⭐⭐⭐⭐⭐</span>
+                    <span class="stat-label">Customer Rated</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">Open Daily</span>
+                    <span class="stat-label">11 AM - 11 PM</span>
+                </div>
+            </div>
+
+            <!-- Owner Section -->
+            <div class="owner-section">
+                <div class="owner-content">
+                    <div class="owner-image">
+                        <img src="images/restaurant/owner.jpg" alt="Owner - Pinch of Spice" onerror="this.src='https://images.pexels.com/photos/3184183/pexels-photo-3184183.jpeg?auto=compress&cs=tinysrgb&w=600'">
+                        <div class="owner-badge">
+                            <span>👨‍🍳 Founder & Chef</span>
+                        </div>
+                    </div>
+                    <div class="owner-text">
+                        <h3>Meet Our Founder</h3>
+                        <p class="owner-quote">"Food is not just about taste - it's about creating memories and bringing people together. At Pinch of Spice, every dish tells a story."</p>
+                        <p>With a passion for authentic Indian cuisine and years of culinary expertise, our founder established Pinch of Spice to bring the finest flavors to Mangaon. We believe in quality over quantity, authenticity over shortcuts, and customer satisfaction above all.</p>
+                        <p>Our team is dedicated to ensuring that every meal you enjoy is prepared with the same care and attention we'd give to our own family. Whether it's a quick lunch or a special celebration, we're honored to be part of your dining experience.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="about-features">
+                <div class="feature">
+                    <span class="feature-icon">🔥</span>
+                    <h3>Tandoor Specialties</h3>
+                    <p>Authentic clay oven cooking with traditional marinades and spices</p>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🍜</span>
+                    <h3>Chinese Fusion</h3>
+                    <p>Perfect blend of Indo-Chinese flavors in our rice and noodle dishes</p>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🌱</span>
+                    <h3>Veg & Non-Veg</h3>
+                    <p>Extensive menu catering to all preferences and dietary needs</p>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Fast Service</h3>
+                    <p>Quick preparation without compromising on quality or taste</p>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">✨</span>
+                    <h3>Fresh Daily</h3>
+                    <p>Ingredients sourced fresh every day for maximum flavor</p>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">💯</span>
+                    <h3>Quality Assured</h3>
+                    <p>Committed to maintaining highest standards in food safety and hygiene</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="info-item">
+                        <h3>Address</h3>
+                        <p>Shop No. C/1, Building No.1<br>
+                        Apala Bazar Somor, Shrimanji Complex<br>
+                        Kacheri Rd, Khandad, Mangaon<br>
+                        Maharashtra 402104</p>
+                    </div>
+                    <div class="info-item">
+                        <h3>Phone</h3>
+                        <p><a href="tel:8451876111">8451876111</a></p>
+                    </div>
+                    <div class="info-item">
+                        <h3>Hours</h3>
+                        <p>Monday - Sunday<br>
+                        11:00 AM - 11:00 PM</p>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <h3>Send us a message</h3>
+                    <form id="contactForm">
+                        <input type="text" placeholder="Your Name" required>
+                        <input type="tel" placeholder="Your Phone" required>
+                        <textarea placeholder="Your Message" rows="5" required></textarea>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Pinch of Spice Kitchen and Grill. All rights reserved.</p>
+            <p>Made with love in Mangaon, Maharashtra</p>
+        </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Your Cart</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="cartItems" class="cart-items">
+                    <!-- Cart items will be dynamically loaded here -->
+                </div>
+                <div class="cart-total">
+                    <h3>Total: <span id="cartTotal">₹0</span></h3>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="clearCart">Clear Cart</button>
+                <button class="btn btn-primary" id="checkoutBtn">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Checkout</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="checkoutForm">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="customerPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Address *</label>
+                        <textarea id="customerAddress" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Special Instructions (Optional)</label>
+                        <textarea id="specialInstructions" rows="2"></textarea>
+                    </div>
+                    <div class="order-summary">
+                        <h3>Order Summary</h3>
+                        <div id="checkoutItems"></div>
+                        <div class="summary-total">
+                            <strong>Total Amount: <span id="checkoutTotal">₹0</span></strong>
+                        </div>
+                    </div>
+
+                    <!-- Payment Options -->
+                    <div class="payment-section">
+                        <h3>Select Payment Method</h3>
+                        <div class="payment-options">
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="paytm" required>
+                                <div class="payment-card">
+                                    <div class="payment-icon">💳</div>
+                                    <div class="payment-info">
+                                        <strong>Paytm / UPI</strong>
+                                        <p>Pay using Paytm or any UPI app</p>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="phonepe" required>
+                                <div class="payment-card">
+                                    <div class="payment-icon">📱</div>
+                                    <div class="payment-info">
+                                        <strong>PhonePe</strong>
+                                        <p>Pay using PhonePe</p>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="cod" required>
+                                <div class="payment-card">
+                                    <div class="payment-icon">💵</div>
+                                    <div class="payment-info">
+                                        <strong>Cash on Delivery</strong>
+                                        <p>Pay when you receive</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">Continue to Payment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Confirmation Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Complete Payment</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="paymentDetails" class="payment-details">
+                    <!-- Payment details will be shown here based on selected method -->
+                </div>
+                <div class="payment-confirmation">
+                    <label class="confirm-checkbox">
+                        <input type="checkbox" id="paymentConfirmed">
+                        <span>I have completed the payment (skip for Cash on Delivery)</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancel</button>
+                <button class="btn btn-primary" id="confirmOrderBtn" disabled>Send Order on WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Order Sent on WhatsApp!</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="success-message">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <h3>Thank you for your order!</h3>
+                    <p>Your order has opened in WhatsApp. <strong>Press send there</strong> to place it — we'll reply to confirm. If WhatsApp didn't open, call us on <a href="tel:8451876111">8451876111</a>.</p>
+                    <p>Order Ref: <strong id="orderId"></strong></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="closeSuccess">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/menu-data.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
