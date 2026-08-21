@@ -417,7 +417,23 @@ function initializeForms() {
     // Handle contact form submission
     contactForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        alert('Thank you for your message! We will contact you soon.');
+
+        // No server to receive this, so hand the message to WhatsApp the same
+        // way orders are handled - otherwise the message would just be discarded
+        const [nameInput, phoneInput] = contactForm.querySelectorAll('input');
+        const messageInput = contactForm.querySelector('textarea');
+
+        const lines = [
+            '*Message from the website*',
+            '',
+            `Name: ${nameInput.value}`,
+            `Phone: ${phoneInput.value}`,
+            '',
+            messageInput.value
+        ];
+
+        window.open(`https://wa.me/${RESTAURANT_WHATSAPP}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+        showNotification('Opening WhatsApp - press send to deliver your message');
         contactForm.reset();
     });
 
